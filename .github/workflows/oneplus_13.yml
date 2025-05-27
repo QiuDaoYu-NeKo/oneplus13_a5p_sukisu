@@ -23,9 +23,14 @@ on:
         required: true
         default: '6.6'
       KERNEL_NAME:
-        description: "内核名称修改(中文不行)"
+        description: "内核中段名称修改(中文不行)"
         required: true
         default: '-By-kuan-FutabaWa'
+      KERNEL_SUFFIX:
+        description: '内核后缀(留空默认,开头别加连字符)'
+        required: false
+        type: string
+        default: ''
       KERNEL_TIME:
        description: "内核构建日期更改(默认为原厂)"
        required: true
@@ -74,8 +79,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-         sudo apt update && sudo apt upgrade -y
-         sudo apt install -y python3 git curl
+          sudo apt update && sudo apt upgrade -y
+          sudo apt-get install curl bison flex make binutils dwarves git lld pahole zip perl make gcc python3 python-is-python3 bc libssl-dev libelf-dev -y
+          sudo rm -rf ./llvm.sh
+          sudo wget https://apt.llvm.org/llvm.sh
+          sudo chmod +x llvm.sh
+          sudo sudo ./llvm.sh 20 all
 
       - name: Install repo tool
         run: |
@@ -90,6 +99,10 @@ jobs:
          repo --trace sync -c -j$(nproc --all) --no-tags
          rm kernel_platform/common/android/abi_gki_protected_exports_* || echo "No protected exports!"
          rm kernel_platform/msm-kernel/android/abi_gki_protected_exports_* || echo "No protected exports!"
+         for f in common/scripts/setlocalversion; do
+            sed -i 's/ -dirty//g' "$f"
+            sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$f"
+          done
          
       - name: Set up SukiSU
         run: |
@@ -100,6 +113,12 @@ jobs:
          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
          export KSU_VERSION=$KSU_VERSION
          sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+      
+      - name: Apply Hide Stuff Patch
+        run: |
+          cd kernel_workspace/common
+          cp ../SukiSU_patch/69_hide_stuff.patch ./
+          patch -p1 < 69_hide_stuff.patch
         
       - name: Set up susfs
         run: |
@@ -268,6 +287,17 @@ jobs:
          cd kernel_workspace/kernel_platform
          sed -i 's/res="\$res\$(cat "\$file")"/res="-android15-8-g013ec21bba94-abogki383916444"/g' ./common/scripts/setlocalversion
          sudo sed -i 's/-android15-8-g013ec21bba94-abogki383916444/${{ github.event.inputs.KERNEL_NAME }}/g' ./common/scripts/setlocalversion
+         cd ..
+          echo "替换内核版本后缀..."
+          if [[ -n "${{ github.event.inputs.KERNEL_SUFFIX }}" ]]; then
+            for f in ./common/scripts/setlocalversion; do
+              sed -i "\$s|echo \"\\\$res\"|echo \"-${{ github.event.inputs.KERNEL_SUFFIX }}\"|" "$f"
+            done
+          else
+            for f in ./common/scripts/setlocalversion; do
+              sed -i "\$s|echo \"\\\$res\"|echo \"-${{ inputs.KERNEL_NAME }}\"|" "$f"
+            done
+          fi
 
       - name: Add sched_ext
         if: ${{inputs.enable_feature_z }}
@@ -283,11 +313,20 @@ jobs:
           export SOURCE_DATE_EPOCH=$(date -d "${{ github.event.inputs.KERNEL_TIME }}" +%s)
           echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> $GITHUB_ENV
           
-      - name: Build Kernel
+
+      - name: 构建内核
         run: |
-           export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
-           cd kernel_workspace/kernel_platform
-           tools/bazel run --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist
+          export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+          cd kernel_workspace
+          if [[ ${{ github.event.inputs.enable_feature_z }} == "true" ]]; then
+            git clone https://github.com/HanKuCha/sched_ext.git
+            rm -rf ./sched_ext/.git
+            rm -rf ./sched_ext/README.md
+            cp -r ./sched_ext/* ./common/kernel/sched
+          fi
+          cd common
+          make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnuabeihf- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out KCFLAGS+=-Wno-error gki_defconfig all
+          echo "内核编译完成！"
 
       - name: Make AnyKernel3
         run: |
