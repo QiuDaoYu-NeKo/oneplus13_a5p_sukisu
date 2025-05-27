@@ -279,12 +279,12 @@ jobs:
         run: |
           export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
           cd kernel_workspace/kernel_platform/common
-          make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnuabeihf- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=dist KCFLAGS+=-Wno-error gki_defconfig all
+          make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnuabeihf- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out KCFLAGS+=-Wno-error gki_defconfig all
           echo "内核编译完成！"
 
       - name: Make AnyKernel3
         run: |
-         cd kernel_workspace/kernel_platform/common/dist/arch/arm64/boot
+         cd kernel_workspace/kernel_platform/common/out/arch/arm64/boot
          curl -LO https://github.com/ShirkNeko/SukiSU_KernelPatch_patch/releases/download/0.11-beta/patch_linux
          chmod +x patch_linux
          ./patch_linux
@@ -293,10 +293,10 @@ jobs:
          
       - name: Make AnyKernel3
         run: |
-         git clone https://github.com/HanKuCha/AnyKernel3.git --depth=1      
+         git clone https://github.com/Kernel-SU/AnyKernel3.git --depth=1      
          rm -rf ./AnyKernel3/.git
          rm -rf ./AnyKernel3/push.sh
-         cp kernel_workspace/kernel_platform/dist/arch/arm64/boot/Image ./AnyKernel3/
+         cp kernel_workspace/kernel_platform/common/out/arch/arm64/boot/Image ./AnyKernel3/
 
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
