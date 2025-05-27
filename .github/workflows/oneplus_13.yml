@@ -278,13 +278,6 @@ jobs:
       - name: 构建内核
         run: |
           export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
-          cd kernel_workspace
-          if [[ ${{ github.event.inputs.enable_feature_z }} == "true" ]]; then
-            git clone https://github.com/HanKuCha/sched_ext.git
-            rm -rf ./sched_ext/.git
-            rm -rf ./sched_ext/README.md
-            cp -r ./sched_ext/* ./common/kernel/sched
-          fi
           cd common
           make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnuabeihf- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out KCFLAGS+=-Wno-error gki_defconfig all
           echo "内核编译完成！"
