@@ -286,7 +286,7 @@ jobs:
         run: |
          cd kernel_workspace/kernel_platform
          mkdir dist
-         cd kernel_workspace/kernel_platform/dist/
+         cd dist
          curl -LO https://github.com/ShirkNeko/SukiSU_KernelPatch_patch/releases/download/0.11-beta/patch_linux
          chmod +x patch_linux
          ./patch_linux
