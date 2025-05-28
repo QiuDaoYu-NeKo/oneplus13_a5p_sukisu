@@ -278,9 +278,13 @@ jobs:
         run: |
           export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
           cd kernel_workspace/kernel_platform/common
-          make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out  gki_defconfig all
-          echo "内核编译完成！"
-
+          make -j$(nproc --all) LLVM=-20 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out  gki_defconfig all
+          scripts/config --file out/.config \
+                 -e LTO_CLANG \
+                 -d LTO_NONE \
+                 -e LTO_CLANG_THIN \
+                 -d LTO_CLANG_FULL \
+                 -e THINLTO
       - name: Make AnyKernel3
         run: |
          cd kernel_workspace/kernel_platform/common/out/arch/arm64/boot
