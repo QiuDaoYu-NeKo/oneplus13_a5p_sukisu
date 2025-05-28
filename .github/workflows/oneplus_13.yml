@@ -2,10 +2,6 @@ name: oneplus_13
 on:
   workflow_dispatch:
     inputs:
-      KERNEL_NAME:
-        description: "内核中段名称修改(中文不行)"
-        required: true
-        default: '-By-kuan-FutabaWa'
       KERNEL_SUFFIX:
         description: '内核后缀修改(可改中文和emoji)'
         required: true
@@ -251,7 +247,6 @@ jobs:
       - name: Add make name
         run: |
          cd kernel_workspace/kernel_platform
-         sed -i 's/res="\$res\$(cat "\$file")"/res="-android15-8-g013ec21bba94-abogki383916444"/g' ./common/scripts/setlocalversion
          sudo sed -i 's/-4k/${{ github.event.inputs.KERNEL_SUFFIX }}/g' ./common/arch/arm64/configs/gki_defconfig
 
       - name: Add sched_ext
