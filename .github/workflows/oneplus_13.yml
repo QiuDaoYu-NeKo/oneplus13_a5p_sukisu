@@ -278,7 +278,7 @@ jobs:
         run: |
           export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
           cd kernel_workspace/kernel_platform/common
-          make -j$(nproc --all) LLVM=-20 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC=clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out  gki_defconfig all
+          make -j$(nproc --all) LLVM=-20 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnuabeihf- CC=/kernel_platform/prebuilts/clang/host/linux-x86/clang-r510928/clang LD=ld.lld HOSTCC=clang HOSTLD=ld.lld O=out KCFLAGS+=-Wno-error gki_defconfig all
           scripts/config --file out/.config \
                  -e LTO_CLANG \
                  -d LTO_NONE \
