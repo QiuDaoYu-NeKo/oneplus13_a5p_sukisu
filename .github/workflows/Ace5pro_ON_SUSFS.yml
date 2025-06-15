@@ -1,4 +1,4 @@
-name: oneplus_ace5_pro
+name: oneplus_ace5_pro_NO_SUSFS
 on:
   workflow_dispatch:
     inputs:
