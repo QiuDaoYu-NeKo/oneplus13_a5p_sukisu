@@ -53,12 +53,25 @@ jobs:
         run: |
          git config --global user.name "Futaba"
          git config --global user.email "3199167602@qq.com"
-
-      - name: Install dependencies
+      - name: Install dependencies if not already present
         run: |
-          sudo apt update && sudo apt upgrade -y
-          sudo apt install -y python3 git curl
-          sudo apt install -y python3 git curl ccache
+          sudo apt update
+          # 检查并安装 python3
+          if ! command -v python3 &> /dev/null; then
+            sudo apt install -y python3
+          fi
+          # 检查并安装 git
+          if ! command -v git &> /dev/null; then
+            sudo apt install -y git
+          fi
+          # 检查并安装 curl
+          if ! command -v curl &> /dev/null; then
+            sudo apt install -y curl
+          fi
+          # 检查并安装 ccache
+          if ! command -v ccache &> /dev/null; then
+            sudo apt install -y ccache
+          fi
 
       - name: Restore ccache
         uses: actions/cache@v3
